@@ -5,7 +5,46 @@ from bs4 import BeautifulSoup
 os.system("clear")
 url = "https://www.iban.com/currency-codes"
 
-currency_result = requests.get(url)
-currency_soup = BeautifulSoup(currency_result.text, "html.parser")
+html = requests.get(url)
+soup = BeautifulSoup(html.text, 'html.parser')
+trs = soup.find_all("tr")
 
-pagination = currency_soup.find
+results = []
+for tr in trs[1:]:
+    tr_soup = BeautifulSoup(str(tr), 'html.parser')
+    tds = tr_soup.get_text(',',strip=True)
+    ary_tds = tds.split(',')
+    if len(ary_tds) == 4:
+        results.append({
+            "Country": ary_tds[0],
+            "Currency": ary_tds[1],
+            "Code": ary_tds[2],
+            "Number": ary_tds[3]
+        })
+        
+def printList():
+    for i in range(len(results)):
+        print(f"# {i+1} {results[i]['Country']}")
+
+def getInput():
+    try:
+        num = input("#: ")
+        num = int(num)
+
+        if num < 1 or num > len(results):
+            print("Choose a number from list")
+            return getInput()
+        else:
+            return num
+    except:
+        print("That wasn't a number")
+        return getInput()
+
+def start():
+    print("Hello! Please choose select a country by number: ")
+    printList()
+    num = getInput()
+    print(f"You chose {results[num-1]['Currency']}")
+    print(f"The currency code is {results[num-1]['Code']}")
+    
+start()
