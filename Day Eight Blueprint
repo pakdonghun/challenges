@@ -4,94 +4,58 @@ import requests
 from bs4 import BeautifulSoup
 
 os.system("clear")
-url = "http://www.alba.co.kr/"
-
-def extract_brand(url):
-    brand_list = []
-    result = requests.get(url)
-    soup = BeautifulSoup(result.text, "html.parser")
-    super_brands = soup.find("div", {"id": "MainSuperBrand"}).find(
-        "ul", {"class": "goodsBox"}).find_all("li")
-    super_brands = super_brands[:-1]
-
-    for brands in super_brands:
-        brand_name = brands.find("span", {"class": "company"}).get_text()
-        brand_link = brands.find("a")["href"]
-        brand_list.append({
-            "name": brand_name,
-            "link": brand_link
-        })
-    return brand_list
 
 
-def extract_pages(url):
-    result = requests.get(url)
-    soup = BeautifulSoup(result.text, "html.parser")
-    job_count = soup.find("p", {"class": "jobCount"}).find("strong").string
-    job_count = int(job_count.replace(",", ""))
-    max_page = (job_count // 50) + 1
-    return max_page
-
-
-def extract_job(job):
-    try:
-        if job['class'] == ['summaryView']:
-            pass
-        else:
-            location = job.find("td", {"class": "local"}
-                                ).get_text().strip()
-            company = job.find("span", {"class": "company"}).get_text().strip()
-            time = job.find("td", {"class": "data"}).get_text().strip()
-            money = job.find("span", {"class": "payIcon"}).get_text().strip(
-            ) + job.find("span", {"class": "number"}).get_text().strip()
-            regDate = job.find(
-                "td", {"class": "regDate last"}).get_text().strip()
-            location = location.split()
-            location = f"{location[0]} {location[1]}"
-            return{
-                "location": location,
-                "company": company,
-                "time": time,
-                "money": money,
-                "regDate": regDate
-            }
-    except:
-        pass
-
-
-def get_job(url):
-    job_list = []
-    max_page = extract_pages(url)
-    for page in range(max_page):
-        result = requests.get(f"{url}job/brand/?page={page+1}")
-        soup = BeautifulSoup(result.text, "html.parser")
-        jobs = soup.find("tbody").find_all("tr")
-        for job in jobs:
-            if extract_job(job) == None:
-                pass
-            else:
-                job_list.append(extract_job(job))
-    return job_list
-
-
-def save_to_file(get_job, name):
-    file = open(f"{name}.csv", mode="w", encoding="utf8", newline='')
+def write_company(company):
+    file = open(f"{company['name']}.csv", mode="w")
     writer = csv.writer(file)
     writer.writerow(["place", "title", "time", "pay", "date"])
-    for job in get_job:
-        writer.writerow(list(job.values()))
+    for job in company["jobs"]:
+      writer.writerow(list(job.values()))
 
 
-i = 0
+alba_url = "http://www.alba.co.kr"
 
-
-for brand in extract_brand(url):
-    i = i + 1
-    name = brand['name']
-    print(f"{i}번째 : {name}")
-    link = brand['link']
-    try:
-        get_jobs = get_job(link)
-        save_to_file(get_jobs, name)
-    except:
-        pass
+alba_request = requests.get(alba_url)
+alba_soup = BeautifulSoup(alba_request.text, "html.parser")
+main = alba_soup.find("div", {"id": "MainSuperBrand"})
+brands = main.find_all("li", {"class": "impact"})
+for brand in brands:
+    link = brand.find("a", {"class": "goodsBox-info"})
+    name = brand.find("span", {"class": "company"})
+    if link and name:
+        link = link["href"]
+        name = name.text
+        company = {'name': name, 'jobs': []}
+        jobs_request = requests.get(link)
+        jobs_soup = BeautifulSoup(jobs_request.text, "html.parser")
+        tbody = jobs_soup.find("div", {"id": "NormalInfo"}).find("tbody")
+        rows = tbody.find_all("tr", {"class": ""})
+        for row in rows:
+            local = row.find("td", {"class": "local"})
+            if local:
+                local = local.text.replace(u'\xa0', ' ')
+            title = row.find("td", {"class": "title"})
+            if title:
+                title = title.find("a").find("span", {
+                    "class": "company"
+                }).text.strip()
+                title = title.replace(u'\xa0', ' ')
+            time = row.find("td", {"class": "data"})
+            if time:
+                time = time.text.replace(u'\xa0', ' ')
+            pay = row.find("td", {"class": "pay"})
+            if pay:
+                pay = pay.text.replace(u'\xa0', ' ')
+            date = row.find("td", {"class": "regDate"})
+            if date:
+                date = date.text.replace(u'\xa0', ' ')
+            job = {
+                "place": local,
+                "title": title,
+                "time": time,
+                "pay": pay,
+                "date": date
+            }
+            company['jobs'].append(job)
+        write_company(company)
