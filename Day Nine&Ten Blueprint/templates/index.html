@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>
+    Nomad News |
+    {% if order_by == 'new' %}
+      New
+    {% elif order_by == 'popular'%}
+      Popular
+    {% endif %}
+  </title>
+  <link href="https://andybrewer.github.io/mvp/mvp.css" rel="stylesheet"></link>
+</head>
+
+<body>
+  <header>
+    <h1>Nomad News</h1>
+    <div>
+      Order by:
+      {% if order_by == 'new' %}
+        <a href="/?order_by=popular">Popular</a>
+      {% else %}
+        <strong>Popular</strong>
+      {% endif %}
+      |
+      {% if order_by == 'popular' %}
+        <a href="/?order_by=new">New</a>
+      {% else %}
+        <strong>New</strong>
+      {% endif %}
+    </div>
+  </header>
+  <main>
+    {% for result in results %}
+      <div>
+        <div>
+          <a href="/{{result.objectID}}">
+            <h3>{{result.title}}</h3>
+          </a>
+          (<a href="{{result.url}}" target="_blanl">{{result.url}}</a>)
+        </div>
+        <div>
+            {{result.points}} points | By: {{result.author}} | {{result.num_comments}} comments
+        </div>
+      </div>
+      <hr />
+    {% endfor %}
+  </main>
+</body>
+
+</html>
