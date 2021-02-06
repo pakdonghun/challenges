@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reddit Reader</title>
+  <link href="https://andybrewer.github.io/mvp/mvp.css" rel="stylesheet"></link>
+</head>
+
+<body>
+  <header>
+    <h1><a href="/">Reddit Reader</a></h1>
+    <h3>Reading: {% for a in select%} r/{{a}}{%endfor%}</h3>
+    <!-- 선택한 sub -->
+  </header>
+  <main>
+    {%for a in data_list%}
+    <!--  -->
+    <br>
+    <div>
+      <h3>
+        <a href="https://reddit.com{{a[0]}}">{{a[2]}}</a>     
+      </h3>
+      <h4>
+        {{a[1]}} upvotes ·  r/{{a[3]}}
+      </h4>
+    </div>
+    </br>
+    {%endfor%}
+  </main>
+</body>
+
+</html>
